@@ -1,0 +1,25 @@
+# This is the makefile that goes into a component/module directory
+
+# Defaults to making the host build
+host:
+	make -f Makefile.host
+
+# Build target (change this if using a name other than target)
+target:
+	make -f Makefile.target
+
+# Clean removes the intermediate outputs
+clean:
+	make -f Makefile.host clean
+
+# Clean removes the intermediate outputs
+clean_target:
+	make -f Makefile.target clean
+
+# very_clean removes _all_ outputs
+very_clean:
+	make -f Makefile.host very_clean
+
+# Clean removes the intermediate outputs
+very_clean_target:
+	make -f Makefile.target clean

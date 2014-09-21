@@ -1,0 +1,74 @@
+# Template for Makefiles, follow directions scattered throughout
+# in the comments for the specific subdirectory
+
+# This directory's location relative to the project root (do not end with '/')
+RELATIVE=..
+
+# This directory's name + parents inside of PROJECT_ROOT (ex. if this is ${PROJECT_ROOT}/libA/module1, then ME=libA/module1)
+ME=
+
+# This is the target to build for. Defaults to host, the name put in here depends on the name after makeinclude.<target>
+ARCH=host
+
+# location of makeinclude in the top-level source directory
+include ${RELATIVE}/common/makeinclude.${ARCH}
+
+# name and type of output executable. Types correspond to folders placed in the top level project directory
+# Possible options:
+# bin = executable binaries
+# lib = libraries
+TYPE=bin
+
+# Distinguishing name for the output.
+TARGET = 
+
+# Actual name of the file that will be built by this makefile
+OUTPUT = ${TARGET}
+
+# List all source-headers pairs with a .o extension (i.e. Class.cpp Class.h --> Class.o)
+OBJS = \
+
+# List all Template class files with the .i extension. This makefile can validate the syntax of the templates
+# before they get used elsewhere.
+TEMPLATES = \
+
+# List all directories where dependent headers are located
+INCLUDES = ${SYS_INCLUDES} \
+	-I${RELATIVE}/${ARCH}/${BUILD_VERSION}/include
+
+# List all directories and library names where dependent libraries
+# are located
+LIBS = ${SYS_LIBS} \
+	-L${RELATIVE}/${ARCH}/${BUILD_VERSION}/lib
+
+##########    If all variables above are correctly filled out,
+##########    nothing below should have to be changed.
+
+${TARGET}: ${TEMPLATES} ${OBJS}
+	@echo Linking ${TARGET} ...
+	${LINK} ${CXXFLAGS} -o ${OUTPUT} ${OBJS} ${LIBS}
+	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/bin
+	${INSTALL} ${OUTPUT} ${RELATIVE}/${ARCH}/${BUILD_VERSION}/${TYPE}
+	@echo
+
+%.o: %.cpp %.hpp
+	@echo Compiling $< ... $@
+	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
+	@echo
+
+%.s: %.hpp
+	@echo Checking syntax of template $< ...
+	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
+	@echo
+
+clean:
+	@echo Cleaning up objects...
+	rm -f ${OBJS} 
+	@echo Cleaning up precomiled templates...
+	rm -f ${TEMPLATES}
+	@echo Removing temporary files and core dumps...
+	rm -f *~ *core	
+
+very_clean: clean
+	@echo Removing ${TARGET}
+	rm -f ${OUTPUT}

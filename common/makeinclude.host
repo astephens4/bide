@@ -1,0 +1,37 @@
+# Tool chain to use
+CC=gcc
+CXX=g++
+LINK=g++
+AR=ar
+AS=as
+
+# Location of the system include files (mainly useful for cross compilation)
+SYS_INCLUDES=
+
+SYS_LIBS=
+
+# Specify wheather to build debug or release, uncomment the one
+# you want and comment out the one you don't want
+
+# BUILD_VERSION=release
+# VERSION_ARGS=-O2
+BUILD_VERSION=debug
+VERSION_ARGS=-g3
+
+#
+# Some simple definitions for use in other makefiles
+#
+
+# Compile source to object code
+COMPILE=${CXX} -c
+
+# Copy/Install files to a location
+INSTALL=cp
+
+# Arguments to use only when building shared libraries
+SHARED_LIB_ARGS=-shared -o
+
+# Extra compiler flags to use when building everything
+# Enable all warnings, enable extra warnings, make warnings into errors, position independent code, 
+# use C++11 standard, build with pthreads
+CXXFLAGS=-Wall -Wextra -Werror -fPIC -std=c++0x -pthread ${VERSION_ARGS}

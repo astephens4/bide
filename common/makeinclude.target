@@ -1,0 +1,41 @@
+# this is an example makeinclude for other toolchains
+# for things like cross compiling
+
+# Tool chain to use
+CC=/opt/raspi/buildtools/bin/arm-linux-gnueabihf-gcc
+CXX=/opt/raspi/buildtools/bin/arm-linux-gnueabihf-g++
+LINK=/opt/raspi/buildtools/bin/arm-linux-gnueabihf-g++
+AR=/opt/raspi/buildtools/bin/arm-linux-gnueabihf-ar
+AS=/opt/raspi/buildtools/bin/arm-linux-gnueabihf-as
+
+SYS_INCLUDES=-I/opt/raspi/buildtools/arm-linux-gnueabihf/sysroot/include \
+        -I/opt/raspi/buildtools/arm-linux-gnueabihf/sysroot/usr/include \
+
+SYS_LIBS=-L/opt/raspi/buildtools/arm-linux-gnueabihf/sysroot/lib \
+     -L/opt/raspi/buildtools/arm-linux-gnueabihf/sysroot/usr/lib \
+
+# Specify wheather to build debug or release, uncomment the one
+# you want and comment out the one you don't want
+
+# BUILD_VERSION=release
+# VERSION_ARGS=-O2
+BUILD_VERSION=debug
+VERSION_ARGS=-g3
+
+#
+# Some simple definitions for use in other makefiles
+#
+
+# Compile source to object code
+COMPILE=${CXX} -c
+
+# Copy/Install files to a location
+INSTALL=cp
+
+# Arguments to use only when building shared libraries
+SHARED_LIB_ARGS=-shared -o
+
+# Extra compiler flags to use when building everything
+# Enable all warnings, enable extra warnings, make warnings into errors, position independent code, 
+# use C++11 standard, build with pthreads
+CXXFLAGS=-Wall -Wextra -Werror -fPIC -std=c++11 -pthread ${VERSION_ARGS}
