@@ -8,41 +8,57 @@ RELATIVE=..
 ME=
 
 # This is the target to build for. Defaults to host, the name put in here depends on the name after makeinclude.<target>
-ARCH=
+ARCH=host
 
 # location of makeinclude in the top-level source directory
+include ${RELATIVE}/common/makeinclude.common
 include ${RELATIVE}/common/makeinclude.${ARCH}
 
-# name of output library
+# Type of file being built
 TYPE = lib
 
 # Distinguishing name of the output
-TARGET = 
+TARGET =
 
 # Actual files name that will get generated
 OUTPUT = lib${TARGET}.a
 
-# List all source-headers pairs with a .o extension (i.e. Class.cpp Class.h --> Class.o)
-OBJS = \
+# List all C++ source files here with a .cpp extension
+CPP_SOURCES = \
 
-# List all Template class files with the .i extension. Templates will only be checked for
-# syntax correctness
+# List all Template class files here will a .hpp extension. These are only checked for basic syntax errors
 TEMPLATES = \
 
-# List all directories where dependent headers are located
-INCLUDES = ${SYS_INCLUDES} \
-	-I${RELATIVE}/${ARCH}/${BUILD_VERSION}/include \
+# List all C source files here with a .c extension
+C_SOURCES = \
 
-# List all directories and library names where dependent libraries
-# are located
-# Do _not_ link against other libraries when making a static library
+# List all assembly sources files here with a .s extension
+ASM_SOURCES = \
+
+# List all directories where dependent headers are located
+INCLUDES = \
+	${SYS_INCLUDES} \
 
 ##########    If all variables above are correctly filled out,
 ##########    nothing below should have to be changed.
 
-${TARGET}: ${TEMPLATES} ${OBJS}
+# Create some variables to hold the location of the intermediate directories
+TEMP_DIR=obj
+CPP_OBJ_DIR=${TEMP_DIR}/cpp
+CPP_LST_DIR=${TEMP_DIR}/cpp
+C_OBJ_DIR=${TEMP_DIR}/c
+ASM_OBJ_DIR=${TEMP_DIR}/asm
+
+# Create the list of the actual build outputs to make
+CPP_LSTS = ${TEMPLATES:%.hpp=${CPP_OBJ_DIR}/%.i}
+CPP_OBJS = ${CPP_SOURCES:%.cpp=${CPP_OBJ_DIR}/%.o}
+C_OBJS = ${C_SOURCES:%.c=${C_OBJ_DIR}/%.o}
+ASM_OBJS = ${ASM_SOURCES:%.s=${ASM_OBJ_DIR}/%.o}
+
+${TARGET}: ${C_OBJS} ${CPP_LSTS} ${CPP_OBJS}
+	@echo
 	@echo Linking ${TARGET} ...
-	${AR} rcs ${OUTPUT} ${OBJS}
+	${AR} rcs ${OUTPUT} ${C_OBJS} ${CPP_OBJS}
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/bin
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/lib
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/include/${ME}
@@ -50,24 +66,46 @@ ${TARGET}: ${TEMPLATES} ${OBJS}
 	${INSTALL} *.hpp ${RELATIVE}/${ARCH}/${BUILD_VERSION}/include/${ME}
 	@echo
 
-%.o: %.cpp %.hpp
+${CPP_OBJ_DIR}/%.o: %.cpp | tempdirs
+	@echo
 	@echo Compiling $< ... $@
-	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
-	@echo
+	${CXX} -c ${CXXFLAGS} ${ARCH_FLAGS} $< -o $@ ${INCLUDES}
 
-%.s: %.hpp
-	@echo Checking syntax of template $< ...
-	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
+${C_OBJ_DIR}/%.o: %.c | tempdirs
 	@echo
+	@echo Compiling $< ... $@
+	${CC} -c ${CFLAGS} ${ARCH_FLAGS} $< -o $@ ${INCLUDES}
+
+${ASM_OBJ_DIR}/%.o: %.s | tempdirs
+	@echo
+	@echo Assmebling $< ... $@
+	${AS} $< -o $@
+
+${CPP_LST_DIR}/%.i: %.hpp | tempdirs
+	@echo
+	@echo Checking syntax of template $< ...
+	${CXX} -c ${CXXFLAGS} ${ARCH_FLAGS} $< -o $@ ${INCLUDES}
+
+tempdirs:
+	@mkdir -p ${C_OBJ_DIR} ${CPP_OBJ_DIR} ${CPP_LST_DIR}
 
 clean:
 	@echo Cleaning up objects...
-	rm -f ${OBJS} 
-	@echo Cleaning up precomiled templates...
-	rm -f ${TEMPLATES}
+	rm -rf ${TEMP_DIR}
 	@echo Removing temporary files and core dumps...
-	rm -f *~ *core	
+	rm -f *~ *core proj_files.txt .clang_complete
 
 very_clean: clean
 	@echo Removing ${TARGET}
 	rm -f ${OUTPUT}
+
+project_files:
+	@echo ${ME}" (G)" > pf_tmp.txt
+	@echo "\t"${CPP_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${C_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${ASM_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${TEMPLATES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@cat pf_tmp.txt | sed -e '/^\s*$$/d' > proj_files.txt
+	@rm pf_tmp.txt
+	@echo ${INCLUDES} | sed -e 's/\s\+-\([iI]\)/\n-\1/g' > .clang_complete
+	@echo ${CXXFLAGS} | sed -e 's/\s\+/\n/g' >> .clang_complete

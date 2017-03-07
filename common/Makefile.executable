@@ -11,64 +11,99 @@ ME=
 ARCH=host
 
 # location of makeinclude in the top-level source directory
+include ${RELATIVE}/common/makeinclude.common
 include ${RELATIVE}/common/makeinclude.${ARCH}
 
-# name and type of output executable. Types correspond to folders placed in the top level project directory
-# Possible options:
-# bin = executable binaries
-# lib = libraries
-TYPE=bin
+# Type of output being created
+TYPE = bin
 
 # Distinguishing name for the output.
-TARGET = 
+TARGET =
 
-# Actual name of the file that will be built by this makefile
+# File name of the output.
 OUTPUT = ${TARGET}
 
-# List all source-headers pairs with a .o extension (i.e. Class.cpp Class.h --> Class.o)
-OBJS = \
 
-# List all Template class files with the .i extension. This makefile can validate the syntax of the templates
-# before they get used elsewhere.
+# List all sources files to be compiled with a C++ compiler here
+CPP_SOURCES = \
+
+# List all templates to perform a simple syntax check on here
 TEMPLATES = \
 
+# List all source files to be compiled with a C compiler here
+C_SOURCES = \
+
+# List all assembly sources files here with a .s extension
+ASM_SOURCES = \
+
 # List all directories where dependent headers are located
-INCLUDES = ${SYS_INCLUDES} \
-	-I${RELATIVE}/${ARCH}/${BUILD_VERSION}/include
+# Note: The compiler's system includes are already included, even when cross-compiling
+INCLUDES = \
+	${SYS_INCLUDES} \
 
 # List all directories and library names where dependent libraries
 # are located
-LIBS = ${SYS_LIBS} \
-	-L${RELATIVE}/${ARCH}/${BUILD_VERSION}/lib
+LIBS = \
+	${SYS_LIBS}
 
 ##########    If all variables above are correctly filled out,
 ##########    nothing below should have to be changed.
 
-${TARGET}: ${TEMPLATES} ${OBJS}
+# Build out to basic temp dirs and the variables of the actual objects to build
+TEMP_DIR=obj
+CPP_OBJ_DIR=${TEMP_DIR}/cpp
+CPP_LST_DIR=${TEMP_DIR}/cpp
+C_OBJ_DIR=${TEMP_DIR}/c
+ASM_OBJ_DIR=${TEMP_DIR}/asm
+
+CPP_LSTS = ${TEMPLATES:%.hpp=${CPP_OBJ_DIR}/%.i}
+CPP_OBJS = ${CPP_SOURCES:%.cpp=${CPP_OBJ_DIR}/%.o}
+C_OBJS = ${C_SOURCES:%.c=${C_OBJ_DIR}/%.o}
+ASM_OBJS = ${C_SOURCES:%.s=${C_OBJ_DIR}/%.o}
+
+${TARGET}: ${C_OBJS} ${CPP_LSTS} ${CPP_OBJS} ${ASM_OBJS}
+	@echo
 	@echo Linking ${TARGET} ...
-	${LINK} ${CXXFLAGS} -o ${OUTPUT} ${OBJS} ${LIBS}
-	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/bin
+	${LINK} ${LDFLAGS} ${CXXFLAGS} -o ${OUTPUT} ${C_OBJS} ${CPP_OBJS} ${ASM_OBJS} ${LIBS}
+	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/${TYPE}
 	${INSTALL} ${OUTPUT} ${RELATIVE}/${ARCH}/${BUILD_VERSION}/${TYPE}
 	@echo
 
-%.o: %.cpp %.hpp
+${CPP_OBJ_DIR}/%.o: %.cpp | tempdirs
+	@echo
 	@echo Compiling $< ... $@
 	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
-	@echo
 
-%.s: %.hpp
+${C_OBJ_DIR}/%.o: %.c | tempdirs
+	@echo
+	@echo Compiling $< ... $@
+	${CC} -c ${CFLAGS} $< -o $@ ${INCLUDES}
+
+${CPP_LST_DIR}/%.i: %.hpp | tempdirs
+	@echo
 	@echo Checking syntax of template $< ...
 	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
-	@echo
+
+tempdirs:
+	mkdir -p ${C_OBJ_DIR} ${CPP_OBJ_DIR} ${CPP_LST_DIR}
 
 clean:
 	@echo Cleaning up objects...
-	rm -f ${OBJS} 
-	@echo Cleaning up precomiled templates...
-	rm -f ${TEMPLATES}
+	rm -rf ${TEMP_DIR}
 	@echo Removing temporary files and core dumps...
-	rm -f *~ *core	
+	rm -f *~ *core proj_files.txt .clang_complete
 
 very_clean: clean
 	@echo Removing ${TARGET}
 	rm -f ${OUTPUT}
+
+project_files:
+	@echo ${ME}" (G)" > pf_tmp.txt
+	@echo "\t"${CPP_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${C_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${ASM_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo "\t"${TEMPLATES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@cat pf_tmp.txt | sed -e '/^\s*$$/d' > proj_files.txt
+	@rm pf_tmp.txt
+	@echo ${INCLUDES} | sed -e 's/\s\+-\([iI]\)/\n-\1/g' > .clang_complete
+	@echo ${CXXFLAGS} | sed -e 's/\s\+/\n/g' >> .clang_complete

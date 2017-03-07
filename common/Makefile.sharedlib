@@ -1,4 +1,4 @@
-# Template for Makefiles which are used to generate shared libraries, follow directions scattered throughout
+# Template for Makefiles, follow directions scattered throughout
 # in the comments for the specific subdirectory
 
 # This directory's location relative to the project root (do not end with '/')
@@ -13,40 +13,49 @@ ARCH=
 # location of makeinclude in the top-level source directory
 include ${RELATIVE}/common/makeinclude.${ARCH}
 
-# name and type of output executable. Types correspond to folders placed in the top level project directory
-# Possible options:
-# bin = executable binaries
-# lib = libraries
+# Type of output being created
 TYPE = lib
 
 # Distinguishing name for the output.
-TARGET = 
+TARGET =
 
-# Actual name of the file that will be built by this makefile
-OUTPUT = lib${TARGET}.so
+# File name of the output.
+OUTPUT = lib${TARGET}.a
 
-# List all source-headers pairs with a .o extension (i.e. Class.cpp Class.h --> Class.o)
-OBJS = \
+# List all sources files to be compiled with a C++ compiler here
+CPP_SOURCES = \
 
-# List all Template class files with the .i extension. Templates will only be checked
-# for syntax correctness.
+# List all templates to perform a simple syntax check on here
 TEMPLATES = \
 
-# List all directories where dependent headers are located
-INCLUDES = ${SYS_INCLUDES} \
-	-I${RELATIVE}/${ARCH}/${BUILD_VERSION}/include \
+# List all source files to be compiled with a C compiler here
+C_SOURCES = \
 
-# List all directories and library names where dependent libraries
-# are located
-LIBS = ${SYS_LIBS} \
-	-L${RELATIVE}/${ARCH}/${BUILD_VERSION}/lib \
+# List all assembly sources files here with a .s extension
+ASM_SOURCES = \
+
+# List all directories where dependent headers are located
+# Note: The compiler's system includes are already included, even when cross-compiling
+INCLUDES = \
 
 ##########    If all variables above are correctly filled out,
 ##########    nothing below should have to be changed.
 
-${TARGET}: ${TEMPLATES} ${OBJS}
+# Build out to basic temp dirs and the variables of the actual objects to build
+TEMP_DIR=obj
+CPP_OBJ_DIR=${TEMP_DIR}/cpp
+CPP_LST_DIR=${TEMP_DIR}/cpp
+C_OBJ_DIR=${TEMP_DIR}/c
+ASM_OBJ_DIR=${TEMP_DIR}/asm
+
+CPP_LSTS = ${TEMPLATES:%.hpp=${CPP_OBJ_DIR}/%.i}
+CPP_OBJS = ${CPP_SOURCES:%.cpp=${CPP_OBJ_DIR}/%.o}
+C_OBJS = ${C_SOURCES:%.c=${C_OBJ_DIR}/%.o}
+ASM_OBJS = ${C_SOURCES:%.s=${C_OBJ_DIR}/%.o}
+
+${TARGET}: ${C_OBJS} ${CPP_LSTS} ${CPP_OBJS} ${ASM_OBJS}
 	@echo Linking ${TARGET} ...
-	${LINK} ${CXXFLAGS} ${SHARED_LIB_ARGS} ${OUTPUT} ${OBJS} ${LIBS}
+	${LINK} ${CXXFLAGS} ${SHARED_LIB_ARGS} ${OUTPUT} ${C_OBJS} ${CPP_OBJS} ${ASM_OBJS} ${LIBS}
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/bin
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/lib
 	mkdir -p ${RELATIVE}/${ARCH}/${BUILD_VERSION}/include
@@ -55,23 +64,34 @@ ${TARGET}: ${TEMPLATES} ${OBJS}
 	${INSTALL} *.hpp ${RELATIVE}/${ARCH}/${BUILD_VERSION}/include/${ME}
 	@echo
 
-%.o: %.cpp %.hpp
+${CPP_OBJ_DIR}/%.o: %.cpp | tempdirs
 	@echo Compiling $< ... $@
 	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
 	@echo
 
-%.s: %.hpp
+${C_OBJ_DIR}/%.o: %.c | tempdirs
+	@echo Compiling $< ... $@
+	${CC} -c ${CFLAGS} $< -o $@ ${INCLUDES}
+	@echo
+
+${ASM_OBJ_DIR}/%.o: %.s | tempdirs
+	@echo Assembling $< ... $@
+	${AS} $< -o $@
+	@echo
+
+${CPP_LST_DIR}/%.i: %.hpp | tempdirs
 	@echo Checking syntax of template $< ...
 	${CXX} -c ${CXXFLAGS} $< -o $@ ${INCLUDES}
 	@echo
 
+tempdirs:
+	mkdir -p ${C_OBJ_DIR} ${CPP_OBJ_DIR} ${CPP_LST_DIR}
+
 clean:
 	@echo Cleaning up objects...
-	rm -f ${OBJS} 
-	@echo Cleaning up precomiled templates...
-	rm -f ${TEMPLATES}
+	rm -rf ${TEMP_DIR}
 	@echo Removing temporary files and core dumps...
-	rm -f *~ *core	
+	rm -f *~ *core
 
 very_clean: clean
 	@echo Removing ${TARGET}

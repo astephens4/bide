@@ -1,0 +1,24 @@
+# BUILD_VERSION=release
+# VERSION_ARGS=-O2
+BUILD_VERSION=debug
+VERSION_ARGS=-g3
+
+#
+# Some simple definitions for use in other makefiles
+#
+
+# Copy/Install files to a location
+INSTALL=cp
+
+# Arguments to use only when building shared libraries
+SHARED_LIB_ARGS=-shared -o
+
+CFLAGS=-Wall -Wextra -Werror -std=c11 ${VERSION_ARGS}
+
+# Extra compiler flags to use when building everything
+# Enable all warnings, enable extra warnings, make warnings into errors
+# use C++14 standard
+CXXFLAGS=-Wall -Wextra -Werror -std=c++14 ${VERSION_ARGS}
+
+# Common flags that all linking should use
+LDFLAGS=

@@ -1,0 +1,18 @@
+# this is an example makeinclude for other toolchains
+# for things like cross compiling
+
+# Tool chain to use
+CC=/usr/bin/arm-none-eabi-gcc
+CXX=/usr/bin/arm-none-eabi-g++
+LINK=/usr/bin/arm-none-eabi-g++
+AR=/usr/bin/arm-none-eabi-ar
+AS=/usr/bin/arm-none-eabi-as
+
+# The toolchain's include folders
+SYS_INCLUDES=-isystem/usr/lib/arm-none-eabi/include
+
+# The toolchain's library folder
+SYS_LIBS=-L/usr/lib/arm-none-eabi/lib
+
+# Compiler flags specific to the architecture
+ARCH_FLAGS=-march=armv6-m -mtune=cortex-m0plus -mabi=aapcs -mlittle-endian -mthumb
