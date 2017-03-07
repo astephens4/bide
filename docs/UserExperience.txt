@@ -1,0 +1,25 @@
+How I imagine the experience:
+
+Features to consider:
+Download and install toolchains
+Integration with version control systems
+
+To create a new project:
+
+user@computer:cwd$ bide-mkproj PROJECT_NAME
+
+    - PROJECT_NAME does not include spaces or special characters
+    - the PROJECT_NAME directory does not have to exist yet, but it can
+        * If dir/PROJECT_NAME exists, no files will be deleted
+    - This creates the following files/directories
+        * PROJECT_NAME/Makefile
+        * PROJECT_NAME/common/makeinclude.default
+        * PROJECT_NAME/common/makeinclude.test
+        * PROJECT_NAME/doc
+    - This will spawn a series of simple questions:
+        1. Toolchains?
+            * Lists available toolchains and option to add a new toolchain
+            * After each toolchain selection, ask user if they would like to alias it
+                - Ex. toolchain name is bcm2651-gcc, alias to raspi. Allows the user to type "make raspi" instead of "make bcm2651-gcc"
+            * Select the default build target after all selections were made
+        2. Build out of source or in source?

@@ -9,38 +9,41 @@ HOST_DIRS =\
 # This is another listing of directories incase you want to build a different/addition set of directories
 # for a different ARCH
 TARGET_DIRS =\
-	Utils \
-	Math \
-	LineAnalysis \
-	Iriss \
-	desktop/SendOrders
 
+default: host
 
-default: target
+# Names of the libraries that are to be built as a part of this project. Only necessary if you wish to
+# make libraries from the topmost directory
+libs= 
 
-libs= libUtils.a libMath.so libIriss.so libLineAnalysis.so
-dirs= Utils Math LineAnalysis Iriss
+# Name of the directories that contain Makefile.dir-templated Makefiles. These are required
+dirs= 
 
+# Used to create build rules for libs and dirs above for the "target" platform
 define build_target
 $(1)-$(2):
 	@echo Building $(1) for $(2)
 	make -s -C $(1) $(2)
 endef
 
+# Used to create the build rules for the above libs and dirs for the "host" platform
 define rule_build
 $(1)-$(2)
 endef
 
+# Used to create the "clean" rules for the libs and dirs above for the "target" platform
 define clean_target
 $(1)-$(2)-clean:
 	@echo Cleaning $(1) for $(2)
 	make -s -C $(1) clean
 endef
 
+# Used to create the "clean" rules for the above libs and dirs for the "host" platform
 define rule_clean
 $(1)-$(2)-clean
 endef
 
+# Used to create the "
 define very_clean_target
 $(1)-$(2)-very-clean:
 	@echo Very cleaning $(1) for $(2)

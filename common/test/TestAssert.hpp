@@ -19,7 +19,7 @@
             || !(std::cout << "Assertion Failed @ " << __FILE__ << ":" << __LINE__ << " - " << #op1 << " " << #operation << " " << #op2 \
                            << "\n(" << op1 << #operation << op2 << ")\n"))
 
-// Please don't use this union. It should only be used interanlly by tests
+// Please don't use this union. It should only be used internally by tests
 union Float_t {
     Float_t(float val) : f(val) { }
     bool negative() { return f < 0.0f; }
@@ -28,7 +28,7 @@ union Float_t {
     float f;
 };
 
-// Please don't use this union. It should only be used interanlly by tests
+// Please don't use this union. It should only be used internally by tests
 union Double_t {
     Double_t(double val) : d(val) { }
     bool negative() { return d < 0.0f; }
@@ -38,11 +38,30 @@ union Double_t {
 };
 
 /**
+ *  METHOD NAME: clid::AssertEquals
+ *
+ *  @FullDescription
+ *  Assert that two different things are equal, and halt, logging the error, if the assertion
+ *  fails.
+ *
+ *  @tparam T   Type of things to be compared. Must provide an operator==
+ *
+ *  @param  arg1    First thing to check for equality
+ *  @param  arg2    Second thing to check for equality
+ */
+template<typename T>
+void AssertEquals( T arg1, T arg2 )
+{
+    MAKE_ASSERTION( arg1, ==, arg2 );
+}
+
+/**
  * Assert that two floating point values are equivalent. This checks equivalency using the 
  * difference in the least significant bits of the float method
  * @param [in] arg1	First value to check for equivalence
  * @param [in] arg2	Value to check against arg1
  */
+template<>
 void AssertEquals(float arg1, float arg2)
 {
     Float_t f1(arg1);
@@ -64,6 +83,7 @@ void AssertEquals(float arg1, float arg2)
  * @param [in] arg1	First value to check for equivalence
  * @param [in] arg2	Value to check against arg1
  */
+template<>
 void AssertEquals(double arg1, double arg2)
 {
     Double_t d1(arg1);
@@ -81,36 +101,5 @@ void AssertEquals(double arg1, double arg2)
     int ulpDiff = std::abs(d1.i - d2.i);
     MAKE_ASSERTION(ulpDiff, <=, MAX_ULP_DIFFERENCE);
 }
-
-void AssertEquals(int32_t arg1, int32_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
-void AssertEquals(uint32_t arg1, uint32_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
-void AssertEquals(int16_t arg1, int16_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
-void AssertEquals(uint16_t arg1, uint16_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
-void AssertEquals(uint8_t arg1, uint8_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
-void AssertEquals(int8_t arg1, int8_t arg2)
-{
-    MAKE_ASSERTION(arg1, ==, arg2);
-}
-
 
 #endif // TEST_ASSERT_H
