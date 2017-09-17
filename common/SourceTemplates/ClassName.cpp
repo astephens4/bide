@@ -5,12 +5,15 @@
  *  \see ClassName.hpp for the declarations corresponding to the definitions in this file.
  */
 
+// This file's header
+#include "ClassName.hpp"
+
 // Standard library includes
 #include <cstdint>
 #include <cstddef>
 
 // Project includes
-#include "Map.hpp"
+// (none)
 
 // Forward Declarations
 
