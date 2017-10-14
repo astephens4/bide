@@ -91,7 +91,7 @@ clean:
 	@echo Cleaning up objects...
 	rm -rf ${TEMP_DIR}
 	@echo Removing temporary files and core dumps...
-	rm -f *~ *core proj_files.txt .clang_complete
+	rm -f *~ *core .vimproj .clang_complete
 
 very_clean: clean
 	@echo Removing ${TARGET}
