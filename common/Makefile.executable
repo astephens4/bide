@@ -99,11 +99,25 @@ very_clean: clean
 
 project_files:
 	@echo ${ME}" (G)" > pf_tmp.txt
-	@echo "\t"${CPP_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
-	@echo "\t"${C_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
-	@echo "\t"${ASM_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
-	@echo "\t"${TEMPLATES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
-	@cat pf_tmp.txt | sed -e '/^\s*$$/d' > proj_files.txt
+	@echo ${CPP_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${C_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${ASM_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${TEMPLATES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@cat pf_tmp.txt | sed -e '/^\s*$$/d' > .vimproj
 	@rm pf_tmp.txt
 	@echo ${INCLUDES} | sed -e 's/\s\+-\([iI]\)/\n-\1/g' > .clang_complete
 	@echo ${CXXFLAGS} | sed -e 's/\s\+/\n/g' >> .clang_complete
+
+project_files:
+	@echo ${ME}" (G)" > pf_tmp.txt
+	@echo ${CPP_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${C_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${ASM_SOURCES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@echo ${TEMPLATES} | sed -e 's/\s*\([a-zA-Z0-9_\-\.]\+\)\s*/\t.\/\1\n/g' >> pf_tmp.txt
+	@cat pf_tmp.txt | sed -e '/^\s*$$/d' > .vimproj
+	@rm pf_tmp.txt
+	@echo ${INCLUDES} | sed -e 's/\s\+-\([iI]\)/\n-\1/g' > .clang_complete
+	@echo ${CXXFLAGS} | sed -e 's/\s\+/\n/g' >> .clang_complete
+
+launch: project_files
+	vim .vimproj
